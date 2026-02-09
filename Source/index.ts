@@ -166,9 +166,7 @@ const app = new Elysia({
 		if (!bearer) return status(401, "Unauthorized");
 		if (bearer !== test) return status(403, "Forbidden");
 
-		const formData = new FormData();
-
-		// const formData = createFileForm(body, "asset.rbxm", "model/x-rbxm");
+		const formData = createFileForm(body, "asset.rbxm", "model/x-rbxm");
 
 		const request: AssetCreateRequest = {
 			assetType: "Model",
@@ -182,8 +180,6 @@ const app = new Elysia({
 		};
 
 		formData.append("request", JSON.stringify(request));
-
-		formData.append("fileContent", new File([body], "asset.rbxm", { type: "model/x-rbxm" }));
 
 		const operation = await makeRequest<Operation<AssetResponse>>("https://apis.roblox.com/assets/v1/assets", "POST", formData);
 		if (!operation.Ok) return status(operation.Status, operation.Result);
