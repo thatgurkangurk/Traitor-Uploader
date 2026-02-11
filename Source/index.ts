@@ -63,7 +63,7 @@ const availableAssets: number[] = [];
 async function authoriseGroup(assetId: number) {
 	const response = await net.makeRequest<AssetAuthoriseResponse>(`https://apis.roblox.com/asset-permissions-api/v1/assets/permissions`, "PATCH", JSON.stringify({
 		subjectType: "Universe",
-		subjectId: env.EXPERIENCE_ID.toString(),
+		subjectId: env.UNIVERSE_ID.toString(),
 		action: "Use",
 		requests: [
 			{
