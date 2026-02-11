@@ -62,7 +62,7 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 }
 
 export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit, contentType?: string): Promise<RequestResponse<T>> {
-	if (url.endsWith("/")) throw new Error("Must not have trailing slash...");
+	if (url.endsWith("/")) throw new Error("Must **not** have trailing slash...");
 
 	const headers = new Headers();
 	headers.append("x-api-key", env.ROBLOX_API_KEY);
@@ -88,7 +88,7 @@ export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: Bo
 }
 
 export async function poll<T>(basePath: string, operation: Operation<T>): Promise<RequestResponse<T>> {
-	if (!basePath.endsWith("/")) throw new Error("moron");
+	if (!basePath.endsWith("/")) throw new Error("Must **have** trailing slash...");
 
 	const response = await makeRequest<Operation<T>>(basePath + operation.path);
 	if (!response.Ok) {
