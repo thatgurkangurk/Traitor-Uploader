@@ -137,6 +137,9 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	const response = await net.poll("https://apis.roblox.com/assets/v1/", operation.Result);
 	if (!response.Ok) return status(500, `Error uploading asset (${response.Status}): ` + response.Result);
 
+	const authoriseResponse = await authoriseGroup(response.Result.assetId);
+	if (!authoriseResponse.Ok) return status(500, `Error authorising asset (${authoriseResponse.Status}): ` + authoriseResponse.Result);
+
 	return status(200);
 }
 
