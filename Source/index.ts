@@ -70,23 +70,28 @@ type RequestResponse<T> = {
 	Result: string,
 });
 
-async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit): Promise<RequestResponse<T>> {
+async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit, contentType?: string): Promise<RequestResponse<T>> {
 	if (url.endsWith("/")) throw new Error("Must not have trailing slash...");
+
+	const headers = new Headers()
+	headers.append("x-api-key", env.ROBLOX_API_KEY);
+
+	if (contentType) headers.append("content-type", contentType);
 
 	const response = await fetch(url, {
 		method: method,
 		body: body,
-		headers: {
-			["x-api-key"]: env.ROBLOX_API_KEY,
-		},
+		headers: headers,
 	});
 
+	const text = await response.text();
+
 	if (!response.ok) return new Promise(async (resolve) => {
-		resolve({Ok: false, Result: await response.text(), Status: response.status})
+		resolve({Ok: false, Result: text ?? response.statusText, Status: response.status})
 	});
 
 	return new Promise(async (resolve) => {
-		resolve({Ok: true, Result: await response.json() as T, Status: response.status})
+		resolve({Ok: true, Result: JSON.parse(text) as T, Status: response.status})
 	});
 }
 
@@ -131,6 +136,80 @@ const availableAssets: number[] = [];
 	});
 }
 
+async function authoriseGroup(assetId: number) {
+	const response = await makeRequest(`https://apis.roblox.com/asset-permissions-api/v1/assets/permissions`, "PATCH", JSON.stringify({
+		subjectType: "Universe",
+		subjectId: env.EXPERIENCE_ID.toString(),
+		action: "Use",
+		requests: [
+			{
+				grantToDependencies: true,
+				assetId: assetId,
+			}
+		],
+		enableDeepAccessCheck: false,
+	}), "application/json");
+
+	if (!response.Ok) console.log(response);
+
+	return response;
+}
+
+async function updateAsset(bearer: string | undefined, body: Uint8Array) {
+	// The first 8 bytes are used as the asset id
+
+	if (!bearer) return status(401, "Unauthorized");
+	if (bearer !== test) return status(403, "Forbidden");
+
+	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
+	const assetContent = body.slice(8);
+
+	const formData = createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
+
+	const request: AssetUpdateRequest = {
+		assetId: assetId
+	}
+
+	const authoriseResponse = await authoriseGroup(assetId);
+	if (!authoriseResponse.Ok) return status(500, `Error authorising asset (${authoriseResponse.Status}): ` + authoriseResponse.Result);
+
+	formData.append("request", JSON.stringify(request));
+
+	const operation = await makeRequest<Operation<AssetResponse>>(`https://apis.roblox.com/assets/v1/assets/${assetId}`, "PATCH", formData);
+	if (!operation.Ok) return status(500, `Error starting upload (${operation.Status}): ` + operation.Result);
+
+	const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
+	if (!response.Ok) return status(500, `Error uploading asset (${response.Status}): ` + response.Result);
+
+	return status(200, "Asset uploaded!");
+}
+
+async function createAsset(bearer: string | undefined, body: Uint8Array) {
+	if (!bearer) return status(401, "Unauthorized");
+	if (bearer !== test) return status(403, "Forbidden");
+
+	const formData = createFileForm(body, "asset.rbxm", "model/x-rbxm");
+
+	const request: AssetCreateRequest = {
+		assetType: "Model",
+		displayName: "User Upload " + availableAssets.length,
+		description: "Test description",
+		creationContext: {
+			creator: {
+				userId: env.UPLOADER_ACCOUNT_ID,
+			},
+		},
+	};
+
+	formData.append("request", JSON.stringify(request));
+
+	const operation = await makeRequest<Operation<AssetResponse>>("https://apis.roblox.com/assets/v1/assets", "POST", formData);
+	if (!operation.Ok) return status(operation.Status, operation.Result);
+
+	const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
+	return status(200, response.Result.toString());
+}
+
 const app = new Elysia({
 		serve: {
 			maxRequestBodySize: MAX_REQUEST_SIZE
@@ -138,54 +217,12 @@ const app = new Elysia({
 	})
 	.use(bearerAuth())
 	.patch("/publish-map", async ({bearer, body}) => {
-		// The first 8 bytes are used as the asset id
-
-		if (!bearer) return status(401, "Unauthorized");
-		if (bearer !== test) return status(403, "Forbidden");
-
-		const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
-		const assetContent = body.slice(8);
-
-		const formData = createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
-
-		const request: AssetUpdateRequest = {
-			assetId: assetId
-		}
-
-		formData.append("request", JSON.stringify(request));
-
-		const operation = await makeRequest<Operation<AssetResponse>>(`https://apis.roblox.com/assets/v1/assets/${assetId}`, "PATCH", formData);
-		if (!operation.Ok) return status(operation.Status, operation.Result);
-
-		const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
-		return status(200, response.Result.toString());
+		return updateAsset(bearer, body);
 	}, {
 		body: t.Uint8Array(),
 	})
 	.post("/publish-map", async ({ bearer, body }) => {
-		if (!bearer) return status(401, "Unauthorized");
-		if (bearer !== test) return status(403, "Forbidden");
-
-		const formData = createFileForm(body, "asset.rbxm", "model/x-rbxm");
-
-		const request: AssetCreateRequest = {
-			assetType: "Model",
-			displayName: "User Upload " + availableAssets.length,
-			description: "Test description",
-			creationContext: {
-				creator: {
-					userId: env.UPLOADER_ACCOUNT_ID,
-				},
-			},
-		};
-
-		formData.append("request", JSON.stringify(request));
-
-		const operation = await makeRequest<Operation<AssetResponse>>("https://apis.roblox.com/assets/v1/assets", "POST", formData);
-		if (!operation.Ok) return status(operation.Status, operation.Result);
-
-		const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
-		return status(200, response.Result.toString());
+		return createAsset(bearer, body);
 	}, {
 		body: t.Uint8Array(),
 	})
