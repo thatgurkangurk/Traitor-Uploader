@@ -149,7 +149,7 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 
 	availableAssets.push(response.Result.assetId);
 
-	return status(200);
+	return JSON.stringify(response.Result.assetId);
 }
 
 const app = new Elysia({
