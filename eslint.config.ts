@@ -16,7 +16,7 @@ export default defineConfig([
 		extends: ["js/recommended"],
 		languageOptions: {
 			globals: {
-				...globals.node,
+				...globals.bunBuiltin,
 			},
 		},
 
@@ -62,10 +62,4 @@ export default defineConfig([
 			"no-unused-vars": ["off"],
 		},
 	},
-	{
-		files: ["./Source/Web/**/*.{js,mjs,cjs,ts,mts,cts}"],
-		languageOptions: {
-			globals: globals.browser
-		}
-	}
 ]);
