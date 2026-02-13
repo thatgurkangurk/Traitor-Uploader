@@ -3,6 +3,7 @@ import type { HTTPMethod } from "elysia";
 import { env } from "./env";
 
 export type RequestResponse<T> = {
+	Raw: Response,
 	Status: number,
 } & ({
 	Ok: true,
@@ -61,10 +62,10 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 	return details ?? JSON.stringify(error);
 }
 
-export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit, contentType?: string): Promise<RequestResponse<T>> {
+export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit, contentType?: string, headers?: Headers, blob?: boolean): Promise<RequestResponse<T>> {
 	if (url.endsWith("/")) throw new Error("Must **not** have trailing slash...");
 
-	const headers = new Headers();
+	headers = headers ?? new Headers();
 	headers.append("x-api-key", env.ROBLOX_API_KEY);
 
 	if (contentType) headers.append("content-type", contentType);
@@ -75,15 +76,32 @@ export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: Bo
 		headers: headers,
 	});
 
+	if (blob) {
+		if (!response.ok) {
+			const text = await response.text() ?? response.statusText;
+			const asObject = JSON.parse(text);
+
+			return new Promise((resolve) => {
+				resolve({Ok: false, Result: parseError(asObject), Status: response.status, Raw: response});
+			});
+		}
+
+		const data = await response.blob();
+
+		return new Promise((resolve) => {
+			resolve({Ok: true, Result: data as T, Status: response.status, Raw: response});
+		});
+	}
+
 	const text = await response.text() ?? response.statusText;
 	const asObject = JSON.parse(text);
 
 	if (!response.ok) return new Promise((resolve) => {
-		resolve({Ok: false, Result: parseError(asObject), Status: response.status});
+		resolve({Ok: false, Result: parseError(asObject), Status: response.status, Raw: response});
 	});
 
 	return new Promise((resolve) => {
-		resolve({Ok: true, Result: asObject as T, Status: response.status});
+		resolve({Ok: true, Result: asObject as T, Status: response.status, Raw: response});
 	});
 }
 
@@ -107,7 +125,7 @@ export async function poll<T>(basePath: string, operation: Operation<T>): Promis
 	}
 
 	return new Promise((resolve) => {
-		resolve({Ok: true, Status: response.Status, Result: response.Result.response!});
+		resolve({Ok: true, Status: response.Status, Result: response.Result.response!, Raw: response.Raw});
 	});
 }
 

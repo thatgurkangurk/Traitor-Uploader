@@ -50,6 +50,10 @@ type AssetAuthoriseResponse = {
 	]
 };
 
+type AssetLocationResponse = {
+	location: string,
+};
+
 const availableAssets: number[] = [];
 
 {
@@ -76,7 +80,7 @@ async function authoriseGroup(assetId: number) {
 
 	if (!response.Ok) return response;
 	if (response.Result.errors.length > 0) {
-		const errorResponse: net.RequestResponse<null> = {Status: 500, Ok: false, Result: net.parseError(response.Result)};
+		const errorResponse: net.RequestResponse<null> = {Status: 500, Ok: false, Result: net.parseError(response.Result), Raw: response.Raw};
 		return errorResponse;
 	}
 
@@ -88,6 +92,40 @@ function getAvailableAssets(bearer: string | undefined) {
 	if (bearer !== test) return status(403, "Forbidden");
 
 	return JSON.stringify(availableAssets);
+}
+
+async function getAssetContent(bearer: string | undefined, assetId: number) {
+	// The first 8 bytes are the asset id
+
+	if (!bearer) return status(401, "Unauthorized");
+	if (bearer !== test) return status(403, "Forbidden");
+
+	const locationRequestHeaders = new Headers();
+	locationRequestHeaders.append("AssetType", "Model");
+
+	const response = await net.makeRequest<AssetLocationResponse>(`https://apis.roblox.com/asset-delivery-api/v1/assetId/${assetId}`, "GET", undefined, undefined, locationRequestHeaders);
+	if (!response.Ok) return status(500, `Error fetching asset content (${response.Status}): ` + response.Result);
+
+	const contentRequestHeaders = new Headers();
+	contentRequestHeaders.append("Accept-Encoding", "gzip");
+
+	const contentResponse = await net.makeRequest<Blob>(response.Result.location, "GET", undefined, undefined, contentRequestHeaders, true);
+	if (!contentResponse.Ok) return status(500, `Error fetching asset content (${contentResponse.Status}): ` + contentResponse.Result);
+
+	let data = await contentResponse.Result.arrayBuffer();
+
+	const encoding = contentResponse.Raw.headers.get("Content-Encoding");
+	if (encoding) {
+		encoding.split(", ").forEach(async enc => {
+			if (enc === "deflate") {
+				data = Bun.inflateSync(data).buffer;
+			} else if (enc === "gzip") {
+				data = Bun.gunzipSync(data).buffer;
+			}
+		});
+	}
+
+	return data;
 }
 
 async function updateAsset(bearer: string | undefined, body: Uint8Array) {
@@ -160,6 +198,9 @@ const app = new Elysia({
 	.use(bearerAuth())
 	.get("/assets", ({ bearer }) => {
 		return getAvailableAssets(bearer);
+	})
+	.get("/asset-content/:assetId", ({ bearer, params: { assetId } }) => {
+		return getAssetContent(bearer, Number.parseInt(assetId));
 	})
 	.patch("/assets", async ({ bearer, body }) => {
 		return updateAsset(bearer, body);
