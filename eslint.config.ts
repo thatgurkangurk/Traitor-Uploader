@@ -5,7 +5,14 @@ import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-	tseslint.configs.recommended,
+	tseslint.configs.recommendedTypeChecked,
+	{
+		languageOptions: {
+			parserOptions: {
+				projectService: true,
+			},
+		},
+	},
 	{
 		files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
 		plugins: {
@@ -59,6 +66,8 @@ export default defineConfig([
 				}
 			],
 			"@typescript-eslint/no-explicit-any": ["off"],
+			"@typescript-eslint/no-floating-promises": "error",
+
 			"no-unused-vars": ["off"],
 		},
 	},

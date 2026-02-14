@@ -126,7 +126,7 @@ async function getAssetContent(bearer: string | undefined, assetId: number) {
 
 	const encoding = contentResponse.Raw.headers.get("Content-Encoding");
 	if (encoding) {
-		encoding.split(", ").forEach(async enc => {
+		encoding.split(", ").forEach(enc => {
 			if (enc === "deflate") {
 				data = Bun.inflateSync(data).buffer;
 			} else if (enc === "gzip") {

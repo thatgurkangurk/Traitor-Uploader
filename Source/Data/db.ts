@@ -51,7 +51,7 @@ export async function getUsers(key: string): Promise<number[] | undefined> {
 	return new Promise(resolve => {
 		if (!isValidKey(key)) return resolve(undefined);
 
-		fs.readFile(filePath, "utf8").then(text => {
+		void fs.readFile(filePath, "utf8").then(text => {
 			return getKeyLine(key, text);
 		}).then(line => {
 			if (!line) return resolve(undefined);
@@ -70,7 +70,7 @@ export async function getAuthorisedAssets(key: string): Promise<number[] | undef
 	return new Promise(resolve => {
 		if (!isValidKey(key)) return resolve(undefined);
 
-		fs.readFile(filePath, "utf8").then(text => {
+		void fs.readFile(filePath, "utf8").then(text => {
 			return getKeyLine(key, text);
 		}).then(line => {
 			if (!line) return resolve(undefined);
@@ -81,6 +81,16 @@ export async function getAuthorisedAssets(key: string): Promise<number[] | undef
 			});
 
 			resolve(authorisedAssets);
+		});
+	});
+}
+
+export async function doesKeyExist(key: string): Promise<boolean> {
+	return new Promise(resolve => {
+		if (!isValidKey(key)) return resolve(false);
+
+		void fs.readFile(filePath, "utf8").then(text => {
+			return resolve(!!getKeyLine(key, text));
 		});
 	});
 }

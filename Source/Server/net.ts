@@ -31,7 +31,7 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 	if (Array.isArray(error)) {
 		let result = "";
 		error.forEach(val => {
-			result += parseError(val);
+			result += parseError(val as Record<string, any> | Record<string, any>[]);
 		});
 		return result;
 	}
@@ -40,7 +40,7 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 		// a v1 "detailed" error: https://create.roblox.com/docs/cloud/reference/errors#gateway-errors
 		let details = "";
 		if (error.errors) {
-			for (const [key, value] of Object.entries(error.errors)) {
+			for (const [key, value] of Object.entries(error.errors as string[])) {
 				details += key + ": " + value + "; ";
 			}
 			details = details.slice(0, -2);
@@ -48,9 +48,9 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 
 		return error.title + "{" + details + "}";
 	} else if (error.message) {
-		return error.message;
+		return error.message as string;
 	} else if (error.errors) {
-		return parseError(error.errors);
+		return parseError(error.errors as string[]);
 	}
 
 	let details = "";
@@ -79,7 +79,7 @@ export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: Bo
 	if (blob) {
 		if (!response.ok) {
 			const text = await response.text() ?? response.statusText;
-			const asObject = JSON.parse(text);
+			const asObject = JSON.parse(text) as object;
 
 			return new Promise((resolve) => {
 				resolve({Ok: false, Result: parseError(asObject), Status: response.status, Raw: response});
@@ -94,7 +94,7 @@ export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: Bo
 	}
 
 	const text = await response.text() ?? response.statusText;
-	const asObject = JSON.parse(text);
+	const asObject = JSON.parse(text) as object;
 
 	if (!response.ok) return new Promise((resolve) => {
 		resolve({Ok: false, Result: parseError(asObject), Status: response.status, Raw: response});
