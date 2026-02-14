@@ -43,15 +43,44 @@ function createTableInput(id: string, value: string, enabled: boolean, parent: N
 
 	cell.appendChild(input);
 	parent.appendChild(cell);
+
+	return input;
+}
+
+async function updateKey(e: Event, key: string, field: "assetIds" | "userIds") {
+	const input = e.target as HTMLInputElement;
+
+	const ids: number[] = [];
+	if (input.value) {
+		for (const val of input.value.split(",")) {
+			const id = Number.parseInt(val);
+			if (!Number.isFinite(id)) return alert("Invalid input");
+			ids.push(id);
+		}
+	}
+
+	const response = await app.key.patch({
+		key: key,
+		[field]: ids,
+	}, {
+		headers: getHeaders(),
+	});
+
+	if (response.error) return alert(response.error.value);
 }
 
 function createTableElement(key: string, data: {userIds: string, assetIds: string}) {
 	const row = document.createElement("tr");
+	row.className = "created-table-element";
 	row.id = "row-" + key;
 
 	createTableInput("key-" + key, key, false, row);
-	createTableInput("userIds-" + key, data.userIds, true, row);
-	createTableInput("assetIds-" + key, data.assetIds, true, row);
+
+	createTableInput("userIds-" + key, data.userIds, true, row)
+		.addEventListener("focusout", async (e) => updateKey(e, key, "userIds"));
+
+	createTableInput("assetIds-" + key, data.assetIds, true, row)
+		.addEventListener("focusout", async (e) => updateKey(e, key, "assetIds"));
 
 	table.children[0]?.insertAdjacentElement("afterend", row);
 }
@@ -62,6 +91,10 @@ passwordButton.addEventListener("click", async () => {
 	});
 
 	if (response.error) return alert(response.error.value);
+
+	Array.from(document.getElementsByClassName("created-table-element")).forEach(val => {
+		val.remove();
+	});
 
 	for (const [key, value] of Object.entries(response.data)) {
 		createTableElement(key, value);
