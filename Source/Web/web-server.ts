@@ -4,11 +4,12 @@ import Elysia, { status, t } from "elysia";
 import { env } from "../env";
 import { deleteKey, doesKeyExist, getAllKeys, saveKey } from "../Data/db";
 import { generate } from "../Data/key";
-import { KEY_ASSET_LIMIT } from "../Server/backend-server";
+import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
 
-const PORT = 443;
+const PORT = env.PORT;
 
 export const app = new Elysia()
+	.use(backend)
 	.use(
 		await staticPlugin({
 			assets: "./Source/Web/Client",
@@ -65,4 +66,4 @@ export const app = new Elysia()
 
 export type Web = typeof app;
 
-console.log(`Web interface starting at ${app.server?.hostname}:${app.server?.port}`);
+console.log(`Server starting at ${app.server?.hostname}:${app.server?.port}`);

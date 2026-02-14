@@ -6,4 +6,5 @@ export const env = {
 	UPLOADER_ACCOUNT_ID: assert(Number.parseInt(assert(Bun.env["UPLOADER_ACCOUNT_ID"]))),
 	UNIVERSE_ID: assert(Number.parseInt(assert(Bun.env["UNIVERSE_ID"]))),
 	WEB_PASSWORD: assert(Bun.env["WEB_PASSWORD"]),
+	PORT: assert(Number.parseInt(assert(Bun.env["PORT"]))),
 };

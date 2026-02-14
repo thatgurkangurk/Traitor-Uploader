@@ -11,8 +11,6 @@ export const KEY_ASSET_LIMIT = 5;
 // Initially I *kinda* wanted to store the key there and authorise updates by checking that key, but that had
 // bad vibes and sure enough its not secure. Also, the rate-limit for fetching asset descriptions is very tight.
 
-const PORT = 31352;
-
 const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger than 4mb I will be very annoyed with them
 
 // These are incomplete because I don't care about the other fields
@@ -214,7 +212,8 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	return JSON.stringify(response.Result.assetId);
 }
 
-const app = new Elysia({
+export const backend = new Elysia({
+	name: "backend",
 	serve: {
 		maxRequestBodySize: MAX_REQUEST_SIZE
 	}
@@ -235,7 +234,4 @@ const app = new Elysia({
 		return createAsset(bearer, body);
 	}, {
 		body: t.Uint8Array(),
-	})
-	.listen(PORT);
-
-console.log(`Server starting at ${app.server?.hostname}:${app.server?.port}`);
+	});
