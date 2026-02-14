@@ -10,10 +10,15 @@ const passwordButton = document.getElementById(
 const table = document.getElementById(
 	"table"
 ) as HTMLTableSectionElement;
+const newEntryButton = document.getElementById(
+	"new-entry"
+) as HTMLButtonElement;
 
 if (
 	!passwordInput ||
-	!passwordButton
+	!passwordButton ||
+	!table ||
+	!newEntryButton
 ) {
 	throw new Error("required DOM elements are missing");
 }
@@ -48,7 +53,7 @@ function createTableElement(key: string, data: {userIds: string, assetIds: strin
 	createTableInput("userIds-" + key, data.userIds, true, row);
 	createTableInput("assetIds-" + key, data.assetIds, true, row);
 
-	table.appendChild(row);
+	table.children[0]?.insertAdjacentElement("afterend", row);
 }
 
 passwordButton.addEventListener("click", async () => {
@@ -61,4 +66,14 @@ passwordButton.addEventListener("click", async () => {
 	for (const [key, value] of Object.entries(response.data)) {
 		createTableElement(key, value);
 	}
+});
+
+newEntryButton.addEventListener("click", async () => {
+	const response = await app.key.post(undefined, {
+		headers: getHeaders(),
+	});
+
+	if (response.error) return alert(response.error.value);
+
+	createTableElement(response.data, {userIds: "", assetIds: ""});
 });

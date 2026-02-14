@@ -107,8 +107,11 @@ export async function getAllKeys(): Promise<{[key: string]: {userIds: string, as
 				const key = split[0];
 				if (!key) return;
 
-				const userIds = assert(split[1]);
-				const assetIds = assert(split[2]);
+				const userIds = split[1] as string;
+				assert(userIds !== undefined);
+
+				const assetIds = split[2] as string;
+				assert(assetIds !== undefined);
 
 				result[key] = {userIds: userIds, assetIds: assetIds};
 			});
