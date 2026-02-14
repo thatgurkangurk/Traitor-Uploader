@@ -93,9 +93,12 @@ async function authoriseGroup(assetId: number) {
 }
 
 function getAvailableAssets(bearer: string | undefined) {
-	if (!bearer) return status(401, "Unauthorized");
+	if (!bearer) return status(401);
 
-	return JSON.stringify(availableAssets);
+	const assets = db.getAuthorisedAssets(bearer);
+	if (assets === undefined) return status(401);
+
+	return JSON.stringify(assets);
 }
 
 async function getAssetContent(bearer: string | undefined, assetId: number) {

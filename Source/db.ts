@@ -21,7 +21,7 @@ function getKeyLine(key: string, text: string): string | undefined {
 	return line;
 }
 
-export async function saveKey(key: string, userIds: number[]) {
+export async function saveKey(key: string, userIds: number[], authorisedAssets: number[]) {
 	atob(key);
 
 	let fileText: string;
@@ -32,7 +32,7 @@ export async function saveKey(key: string, userIds: number[]) {
 		const lines = fileText.split("\n");
 		if (lines[0] === "") lines.shift();
 
-		const newLine = key + ":" + userIds.join(",");
+		const newLine = key + ":" + userIds.join(",") + ":" + authorisedAssets.join(",");
 		if (line) {
 			const index = lines.findIndex(l => l === line);
 			if (index !== -1) {
@@ -61,6 +61,25 @@ export async function getUsers(key: string): Promise<number[] | undefined> {
 			});
 
 			resolve(users);
+		});
+	});
+}
+
+export async function getAuthorisedAssets(key: string): Promise<number[] | undefined> {
+	return new Promise(resolve => {
+		atob(key);
+
+		fs.readFile(filePath, "utf8").then(text => {
+			return getKeyLine(key, text);
+		}).then(line => {
+			if (!line) return resolve(undefined);
+
+			const authorisedAssets: number[] = [];
+			line.split(":")[2]?.split(",").forEach(id => {
+				authorisedAssets.push(Number.parseInt(id));
+			});
+
+			resolve(authorisedAssets);
 		});
 	});
 }
