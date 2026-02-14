@@ -23,7 +23,7 @@ if (
 	throw new Error("required DOM elements are missing");
 }
 
-const app = treaty<Web>("localhost:443");
+const app = treaty<Web>(window.location.origin);
 
 function getHeaders() {
 	const headers = {
