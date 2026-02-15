@@ -120,12 +120,16 @@ async function getAvailableAssets(bearer: string | undefined) {
 	return JSON.stringify(assets);
 }
 
+async function isAssetAuthorised(bearer: string, assetId: number) {
+	return (await db.getAuthorisedAssets(bearer) ?? []).find(value => value === assetId) !== undefined;
+}
+
 async function getAssetContent(bearer: string | undefined, assetId: number) {
 	// The first 8 bytes are the asset id
 
 	if (!bearer) return status(401);
 
-	if (!((await db.getAuthorisedAssets(bearer) ?? []).find(value => value === assetId))) return status(403);
+	if (!await isAssetAuthorised(bearer, assetId)) return status(403);
 
 	if (!rateLimit(bearer)) return status(429);
 
@@ -172,7 +176,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
 	const assetContent = body.slice(8);
 
-	if (!(assetId in (await db.getAuthorisedAssets(bearer) ?? []))) return status(403);
+	if (!await isAssetAuthorised(bearer, assetId)) return status(403);
 
 	const formData = net.createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
 
