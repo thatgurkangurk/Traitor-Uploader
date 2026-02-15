@@ -13,7 +13,7 @@ export const KEY_ASSET_LIMIT = 5;
 
 const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger than 4mb I will be very annoyed with them
 
-const RATE_LIMIT_COUNT = 2;
+const RATE_LIMIT_COUNT = 5;
 const RATE_LIMIT_INTERVAL = 60_000; // in ms
 
 const rateLimits: {[key: string]: {requests: number, firstRequestAt: number} | undefined} = {};
