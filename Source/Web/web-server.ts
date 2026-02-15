@@ -2,7 +2,7 @@ import { bearer as bearerAuth } from "@elysiajs/bearer";
 import staticPlugin from "@elysiajs/static";
 import Elysia, { status, t } from "elysia";
 import { env } from "../env";
-import { deleteKey, doesKeyExist, getAllKeys, saveKey } from "../Data/db";
+import { deleteKey, doesKeyExist, getAllKeys, getAuthorisedAssets, getUsers, saveKey } from "../Data/db";
 import { generate } from "../Data/key";
 import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
 
@@ -40,7 +40,7 @@ export const app = new Elysia()
 
 		if ((body.assetIds ?? []).length > KEY_ASSET_LIMIT) return status(400);
 
-		await saveKey(key, body.userIds ?? [], body.assetIds ?? []);
+		await saveKey(key, body.userIds ?? await getUsers(key) ?? [], body.assetIds ?? await getAuthorisedAssets(key) ?? []);
 
 		return status(200);
 	}, {
