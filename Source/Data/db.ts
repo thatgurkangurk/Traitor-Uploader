@@ -35,7 +35,7 @@ export async function createUserIfNotExists(
 	return await db.insert(schema.userTable).values({
 		name: name || `No name provided ${generateId()} -- CHANGE ME !`,
 		robloxUserId: robloxUserId,
-	});
+	}).onConflictDoNothing();
 }
 
 async function getManyUsers(robloxUserIds: string[]): Promise<schema.User[]> {
@@ -59,6 +59,26 @@ async function getManyUsers(robloxUserIds: string[]): Promise<schema.User[]> {
 	return [...users];
 }
 
+export async function saveNewKey(key: string): Promise<string> {
+	return db.transaction(async tx => {
+		const [group] = await tx
+			.insert(schema.groupTable)
+			.values({
+				name: `Key Group ${key}`,
+			})
+			.returning();
+
+		const groupId = group!.id;
+
+		await tx.insert(schema.keyTable).values({
+			key,
+			ownerId: groupId,
+		});
+
+		return groupId;
+	});
+}
+
 export async function saveKey(
 	key: string,
 	userIds: string[],
@@ -77,25 +97,9 @@ export async function saveKey(
 			},
 		});
 
-		let groupId: string;
+		if (!existingKey) throw new Error("key does not exist, use saveNewKey() first");
 
-		if (existingKey) {
-			groupId = existingKey.ownerId;
-		} else {
-			const [group] = await tx
-				.insert(schema.groupTable)
-				.values({
-					name: `Key Group ${key}`,
-				})
-				.returning();
-
-			groupId = group!.id;
-
-			await tx.insert(schema.keyTable).values({
-				key,
-				ownerId: groupId,
-			});
-		}
+		const groupId = existingKey.ownerId;
 
 		await tx
 			.insert(schema.userToGroupTable)
@@ -115,7 +119,7 @@ export async function saveKey(
 					robloxId: assetId.toString(),
 					key,
 				})),
-			);
+			).onConflictDoNothing();
 		}
 	});
 }
@@ -123,7 +127,11 @@ export async function saveKey(
 export async function deleteKey(key: string): Promise<void> {
 	if (!isValidKey(key)) return;
 
-	await db.delete(schema.keyTable).where(eq(schema.keyTable.key, key));
+	try {
+		await db.delete(schema.keyTable).where(eq(schema.keyTable.key, key));
+	} catch (e) {
+		console.log(e);
+	};
 
 	return;
 }

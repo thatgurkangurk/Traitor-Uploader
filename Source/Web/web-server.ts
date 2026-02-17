@@ -8,6 +8,7 @@ import {
 	getAuthorisedAssets,
 	getUsers,
 	saveKey,
+	saveNewKey,
 } from "../Data/db";
 import { generate } from "../Data/key";
 import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
@@ -23,14 +24,28 @@ export const app = new Elysia()
 		if (!bearer) return status(401);
 		if (bearer !== env.WEB_PASSWORD) return status(403);
 
-		return status(200, await getAllKeys());
+		const keys = await getAllKeys();
+
+		const keyValues: {[key: string]: {userIds: string, assetIds: string}} = {};
+
+		for (const { key } of keys) {
+			const users = (await getUsers(key) ?? []).map(user => user.robloxUserId);
+			const assets = await getAuthorisedAssets(key) ?? [];
+
+			keyValues[key] = {
+				userIds: users.join(","),
+				assetIds: assets.join(","),
+			};
+		}
+
+		return status(200, keyValues);
 	})
 	.post("/key", async ({ bearer }) => {
 		if (!bearer) return status(401);
 		if (bearer !== env.WEB_PASSWORD) return status(403);
 
 		const key = generate();
-		await saveKey(key, [], []);
+		await saveNewKey(key);
 
 		return status(200, key);
 	})
