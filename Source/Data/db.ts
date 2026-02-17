@@ -1,7 +1,6 @@
 import { drizzle } from "drizzle-orm/libsql/node";
 import * as schema from "./schema";
 import { isValidKey } from "./key";
-import { generateId } from "../Util/id";
 import { eq } from "drizzle-orm";
 
 export const db = drizzle("file:db.sqlite", {
@@ -25,15 +24,8 @@ export async function doesKeyExist(key: string): Promise<boolean> {
 
 export async function createUserIfNotExists(
 	robloxUserId: string,
-	name?: string,
 ) {
-	if (!name)
-		console.warn(
-			"[WARN] please provide a name to createUserIfNotExists, thanks !",
-		);
-
 	return await db.insert(schema.userTable).values({
-		name: name || `No name provided ${generateId()} -- CHANGE ME !`,
 		robloxUserId: robloxUserId,
 	}).onConflictDoNothing();
 }

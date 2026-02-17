@@ -8,7 +8,6 @@ export const userTable = sqliteTable("users", {
 	id: text("id")
 		.primaryKey()
 		.$defaultFn(() => generateId()),
-	name: text("name").notNull(),
 	robloxUserId: text("roblox_user_id").notNull().unique(),
 });
 
