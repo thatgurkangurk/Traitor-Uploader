@@ -38,8 +38,9 @@ export const keyTable = sqliteTable("keys", {
 		.$defaultFn(() => generateId()),
 	key: text("key")
 		.unique()
+		.notNull()
 		.$defaultFn(() => generateId()),
-	ownerId: text("owner_id").notNull(),
+	ownerId: text("owner_id").notNull().references(() => groupTable.id),
 });
 
 export const assetTable = sqliteTable("assets", {
@@ -47,7 +48,7 @@ export const assetTable = sqliteTable("assets", {
 		.primaryKey()
 		.$defaultFn(() => generateId()),
 	robloxId: text("roblox_id").notNull().unique(),
-	key: text("key").notNull(),
+	key: text("key").notNull().references(() => keyTable.key),
 });
 
 export const relations = defineRelations(
@@ -61,6 +62,7 @@ export const relations = defineRelations(
 		},
 		groupTable: {
 			participants: r.many.userTable(),
+			keys: r.many.keyTable()
 		},
 		keyTable: {
 			owner: r.one.groupTable({
@@ -77,3 +79,8 @@ export const relations = defineRelations(
 		}
 	}),
 );
+
+export type Key = typeof keyTable.$inferSelect;
+export type User = typeof userTable.$inferSelect;
+export type Asset = typeof assetTable.$inferSelect;
+export type Group = typeof groupTable.$inferSelect;

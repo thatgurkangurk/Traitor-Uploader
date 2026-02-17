@@ -1,7 +1,14 @@
 import { bearer as bearerAuth } from "@elysiajs/bearer";
 import Elysia, { status, t } from "elysia";
 import { env } from "../env";
-import { deleteKey, doesKeyExist, getAllKeys, getAuthorisedAssets, getUsers, saveKey } from "../Data/txt-db";
+import {
+	deleteKey,
+	doesKeyExist,
+	getAllKeys,
+	getAuthorisedAssets,
+	getUsers,
+	saveKey,
+} from "../Data/db";
 import { generate } from "../Data/key";
 import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
 import index from "./Client/index.html";
@@ -27,28 +34,41 @@ export const app = new Elysia()
 
 		return status(200, key);
 	})
-	.patch("/key/:key", async ({ bearer, body, params: { key } }) => {
-		if (!bearer) return status(401);
-		if (bearer !== env.WEB_PASSWORD) return status(403);
+	.patch(
+		"/key/:key",
+		async ({ bearer, body, params: { key } }) => {
+			if (!bearer) return status(401);
+			if (bearer !== env.WEB_PASSWORD) return status(403);
 
-		if (!await doesKeyExist(key)) return status(404);
+			if (!(await doesKeyExist(key))) return status(404);
 
-		if ((body.assetIds ?? []).length > KEY_ASSET_LIMIT) return status(400);
+			if ((body.assetIds ?? []).length > KEY_ASSET_LIMIT) return status(400);
 
-		await saveKey(key, body.userIds ?? await getUsers(key) ?? [], body.assetIds ?? await getAuthorisedAssets(key) ?? []);
+			const queriedUsers = (await getUsers(key)) ?? [];
 
-		return status(200);
-	}, {
-		body: t.Object({
-			userIds: t.Optional(t.Array(t.Number())),
-			assetIds: t.Optional(t.Array(t.Number())),
-		})
-	})
+			await saveKey(
+				key,
+				body.userIds?.map((value) => value.toString()) ??
+					queriedUsers.map((value) => value.robloxUserId),
+				body.assetIds?.map((value) => value.toString()) ??
+					(await getAuthorisedAssets(key)) ??
+					[],
+			);
+
+			return status(200);
+		},
+		{
+			body: t.Object({
+				userIds: t.Optional(t.Array(t.Number())),
+				assetIds: t.Optional(t.Array(t.Number())),
+			}),
+		},
+	)
 	.delete("/key/:key", async ({ bearer, params: { key } }) => {
 		if (!bearer) return status(401);
 		if (bearer !== env.WEB_PASSWORD) return status(403);
 
-		if (!await doesKeyExist(key)) return status(404);
+		if (!(await doesKeyExist(key))) return status(404);
 
 		await deleteKey(key);
 

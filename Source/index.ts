@@ -1,7 +1,7 @@
-import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { migrate } from "drizzle-orm/libsql/migrator";
 import { db } from "./Data/db";
 
-migrate(db, {
+await migrate(db, {
 	migrationsFolder: "drizzle"
 });
 
