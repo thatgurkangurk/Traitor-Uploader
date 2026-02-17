@@ -48,7 +48,9 @@ export const assetTable = sqliteTable("assets", {
 		.primaryKey()
 		.$defaultFn(() => generateId()),
 	robloxId: text("roblox_id").notNull().unique(),
-	key: text("key").notNull().references(() => keyTable.key),
+	key: text("key").notNull().references(() => keyTable.key, {
+		onDelete: "cascade"
+	}),
 });
 
 export const relations = defineRelations(
