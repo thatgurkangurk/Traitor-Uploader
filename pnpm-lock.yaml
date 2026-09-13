@@ -12,20 +12,20 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.10.0(jiti@2.7.0))
       '@libsql/client':
-        specifier: ^0.17.2
-        version: 0.17.4
+        specifier: ^0.18.0
+        version: 0.18.0
       '@stylistic/eslint-plugin':
         specifier: ^5.7.1
         version: 5.10.0(eslint@10.10.0(jiti@2.7.0))
       drizzle-kit:
-        specifier: ^1.0.0-beta.15-859cf75
+        specifier: ^1.0.0-rc.4
         version: 1.0.0-rc.5-ab785fc
       drizzle-orm:
-        specifier: ^1.0.0-beta.15-859cf75
-        version: 1.0.0-rc.5-ab785fc(@libsql/client@0.17.4)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2)
+        specifier: ^1.0.0-rc.4
+        version: 1.0.0-rc.5-ab785fc(@libsql/client@0.18.0)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2)
       drizzle-seed:
-        specifier: ^1.0.0-beta.15-859cf75
-        version: 1.0.0-rc.5-ab785fc(drizzle-orm@1.0.0-rc.5-ab785fc(@libsql/client@0.17.4)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2))
+        specifier: ^1.0.0-rc.4
+        version: 1.0.0-rc.5-ab785fc(drizzle-orm@1.0.0-rc.5-ab785fc(@libsql/client@0.18.0)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2))
       eslint:
         specifier: ^10.0.0
         version: 10.10.0(jiti@2.7.0)
@@ -299,11 +299,11 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@libsql/client@0.17.4':
-    resolution: {integrity: sha512-lYayFWasDV78A+TjlEhr6ubb3odBV6OHjb+wdp8VQcyWWAEIjuwbCHaraEUS4m4yWoo0BvZo96It4VdzZRmRWw==}
+  '@libsql/client@0.18.0':
+    resolution: {integrity: sha512-zMCCo58vv7w27j7+cnt/GW+X6/Rih6cHZ86PKi0AxCMOqMfrVgG9OZ5lW2bDMJhSeOjsv2szH2nJF3A9l36UmA==}
 
-  '@libsql/core@0.17.4':
-    resolution: {integrity: sha512-LqF9gIvnJ38nmAH1y/ChizHqDO/MO1wLgA96XrraulEEbqXxLjleSH92YWTolbuJKgPUmGu4aJk9W3UnAcxLOQ==}
+  '@libsql/core@0.18.0':
+    resolution: {integrity: sha512-N8RR2CIpcgtbKZnXs2KVpw2lJQfinUj3I56e7qRDRpK18Hty0Rr8nr00VmFb4R/DsqOanPB/TaP3+QAQLZeXMg==}
 
   '@libsql/darwin-arm64@0.5.29':
     resolution: {integrity: sha512-K+2RIB1OGFPYQbfay48GakLhqf3ArcbHqPFu7EZiaUcRgFcdw8RoltsMyvbj5ix2fY0HV3Q3Ioa/ByvQdaSM0A==}
@@ -1687,9 +1687,9 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@libsql/client@0.17.4':
+  '@libsql/client@0.18.0':
     dependencies:
-      '@libsql/core': 0.17.4
+      '@libsql/core': 0.18.0
       '@libsql/hrana-client': 0.10.0
       js-base64: 3.9.3
       libsql: 0.5.29
@@ -1698,7 +1698,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@libsql/core@0.17.4':
+  '@libsql/core@0.18.0':
     dependencies:
       js-base64: 3.9.3
 
@@ -2040,16 +2040,16 @@ snapshots:
       get-tsconfig: 4.14.3
       jiti: 2.7.0
 
-  drizzle-orm@1.0.0-rc.5-ab785fc(@libsql/client@0.17.4)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2):
+  drizzle-orm@1.0.0-rc.5-ab785fc(@libsql/client@0.18.0)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2):
     optionalDependencies:
-      '@libsql/client': 0.17.4
+      '@libsql/client': 0.18.0
       '@sinclair/typebox': 0.34.52
       bun-types: 1.4.2
       zod: 4.6.2
 
-  drizzle-seed@1.0.0-rc.5-ab785fc(drizzle-orm@1.0.0-rc.5-ab785fc(@libsql/client@0.17.4)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2)):
+  drizzle-seed@1.0.0-rc.5-ab785fc(drizzle-orm@1.0.0-rc.5-ab785fc(@libsql/client@0.18.0)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2)):
     dependencies:
-      drizzle-orm: 1.0.0-rc.5-ab785fc(@libsql/client@0.17.4)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2)
+      drizzle-orm: 1.0.0-rc.5-ab785fc(@libsql/client@0.18.0)(@sinclair/typebox@0.34.52)(bun-types@1.4.2)(zod@4.6.2)
       pure-rand: 6.1.0
 
   env-runner@0.2.1:
